@@ -5,7 +5,10 @@ class Producto:
         self.codigo = codigo
         self.descripcion = descripcion
         self.precio = precio
-        self.cantidad = cantidad
+        self.cantidad = cantidad # Cantidad disponible en stock
+
+    def __str__(self) -> str:
+        return f"Producto: {self.descripcion} | Precio: ${self.precio} | Stock: {self.cantidad}"
 
 class MetodoPago(ABC):
     @abstractmethod
