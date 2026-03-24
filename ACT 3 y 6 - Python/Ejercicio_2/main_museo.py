@@ -1,39 +1,32 @@
-from modelos_museo import ObraDeArte, Cuadro, Escultura
-from datetime import datetime, timedelta
+from modelos_museo import ObraDeArte, Cuadro, Escultura, Usuario
 from typing import List
 
-def probar_museo() -> None:
-    print("="*45)
-    print("      SISTEMA DE GESTIÓN MURAL - LA SALLE")
-    print("="*45)
-    
-    # 1. Registro de Obras
-    obra1: Cuadro = Cuadro("La Noche Estrellada", "Van Gogh", "Postimpresionismo", 100000000, "1889", "Impresionista", "Óleo")
-    obra2: Escultura = Escultura("El Pensador", "Rodin", "Moderna", 50000000, "1904", "Realismo", "Bronce")
-    
-    # 2. Definimos la lista con tipo explícito para que Pylance no se queje
-    inventario: List[ObraDeArte] = [obra1, obra2]
-    
-    # 3. Simulación de Tiempo (Forzamos mantenimiento)
-    obra2.ultima_restauracion = datetime.now() - timedelta(days=6*365)
-    
-    for obra in inventario:
-        # Ahora Pylance sabe que 'obra' es una ObraDeArte y conoce sus métodos
-        print(f"\n[*] Analizando: {obra}")
-        print(f"    Detalles: {obra.mostrar_detalle()}")
-        
-        # Ejecutar chequeo diario automático
-        obra.chequear_mantenimiento_automatico()
-        
+def probar_gestion_director():
     print("\n" + "="*45)
-    print("      REPORTE DE RESTAURACIONES")
+    print("      MÓDULO DE DIRECCIÓN Y SEGURIDAD")
     print("="*45)
+
+    # 1. Seguridad
+    director = Usuario("admin", "lasalle123", "Director")
+    print("[Login] Intentando acceder como Director...")
     
-    for obra in inventario:
-        if obra.historial_restauraciones:
-            print(f"Obra: {obra.titulo}")
-            for res in obra.historial_restauraciones:
-                print(f"  - {res}")
+    if director.autenticar("admin", "lasalle123"):
+        print("[OK] Autenticación exitosa. Bienvenido, Director.")
+        
+        # 2. Inventario para valoración
+        obra1 = Cuadro("La Noche Estrellada", "Van Gogh", "Post", 100000000, "1889", "Imp", "Óleo")
+        obra2 = Escultura("El Pensador", "Rodin", "Moderna", 50000000, "1904", "Real", "Bronce")
+        inventario: List[ObraDeArte] = [obra1, obra2]
+
+        # 3. Requisito: Suma total de valoraciones
+        total_museo = sum(obra.valor for obra in inventario)
+        print(f"\n[REPORTE] Valoración total del patrimonio: ${total_museo}")
+
+        # 4. Gestión de Cesiones
+        obra1.ceder_a_museo("Museo del Louvre", 15000000)
+        # Intentar ceder la misma obra a otro (debe quedar en espera)
+        obra1.ceder_a_museo("Museo Prado", 12000000)
 
 if __name__ == "__main__":
-    probar_museo()
+    # Mantén tu función anterior si quieres, o solo llama a la nueva
+    probar_gestion_director()

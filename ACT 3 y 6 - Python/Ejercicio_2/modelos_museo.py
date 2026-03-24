@@ -23,8 +23,9 @@ class ObraDeArte(ABC):
         self.estado = "Expuesta"  
         self.ultima_restauracion: datetime = self.fecha_entrada_museo
         self.historial_restauraciones: List[Restauracion] = []
-        # Para que Pylance no se queje de Optional:
         self.museo_en_espera: Optional[str] = None 
+        self.importe_cesion: float = 0.0
+        self.museo_cesionario: Optional[str] = None
 
     def enviar_a_restauracion(self, tipo: str):
         if self.estado != "Restauración":
@@ -45,6 +46,16 @@ class ObraDeArte(ABC):
             self.estado = "Expuesta"
             self.ultima_restauracion = datetime.now()
             print(f"[SOPORTE] Restauración de {self.titulo} finalizada.")
+
+    def ceder_a_museo(self, nombre_museo: str, importe: float):
+        if self.estado == "Expuesta":
+            self.estado = "Cedida"
+            self.museo_cesionario = nombre_museo
+            self.importe_cesion = importe
+            print(f"[DIRECTOR] Obra '{self.titulo}' cedida a {nombre_museo} por ${importe}")
+        else:
+            self.museo_en_espera = nombre_museo
+            print(f"[DIRECTOR] {nombre_museo} en espera. '{self.titulo}' está actualmente {self.estado}")
 
     @abstractmethod
     def mostrar_detalle(self) -> str:
@@ -70,3 +81,12 @@ class Escultura(ObraDeArte):
 
     def mostrar_detalle(self) -> str:
         return f"Estilo: {self.estilo}, Material: {self.material}"
+
+class Usuario:
+    def __init__(self, username: str, password: str, rol: str):
+        self.username = username
+        self.password = password
+        self.rol = rol # Director, Restaurador, Encargado
+
+    def autenticar(self, user: str, psw: str) -> bool:
+        return self.username == user and self.password == psw
