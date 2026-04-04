@@ -6,47 +6,58 @@ Este software es una solución integral para la gestión de ventas a distancia. 
 ---
 
 ## 2. Arquitectura del Sistema
-El proyecto se divide en dos módulos principales para separar la lógica de negocio de la ejecución, siguiendo buenas prácticas de desarrollo:
+El proyecto sigue un patrón de diseño modular para separar la lógica de negocio de la interfaz de ejecución, facilitando el mantenimiento:
 
-* **`modelos.py`**: Define la estructura de datos, las reglas de negocio y las abstracciones del sistema.
-* **`main.py`**: Orquestador que ejecuta la simulación y valida la interacción entre objetos.
+- **modelos.py**: Contiene la definición de clases, tipos de datos (`typing`) y las reglas de negocio.  
+- **main.py**: Script principal que orquesta la simulación y valida la interacción entre los objetos del sistema.  
+- **Televentas Diagrama UML.jpeg**: Representación gráfica de la jerarquía y relaciones de clases.  
 
 ---
 
 ## 3. Implementación de Conceptos POO
 
 ### A. Abstracción y Herencia
-Se implementó una **Clase Abstracta** para la gestión de pagos, cumpliendo con el principio de **Inversión de Dependencia**:
-* **Clase `MetodoPago`**: Define el contrato `procesar_pago(monto)`.
-* **Clase `TarjetaCredito`**: Implementación concreta que hereda de la base abstracta. Esto permite que el sistema sea escalable a otros métodos (Efectivo, PSE, Bitcoin) sin modificar la lógica interna de la orden de compra.
+Se implementó una Clase Base Abstracta (ABC) para la gestión de pagos, siguiendo el principio SOLID de Abierto/Cerrado:
+
+- **Clase `MetodoPago`**: Define el contrato obligatorio `procesar(monto) -> bool`.  
+- **Clase `TarjetaCredito`**: Implementación concreta que hereda de la base.  
+
+Esta arquitectura permite extender el sistema a nuevos métodos (PSE, Efectivo, Cripto) sin alterar la lógica de la orden de compra.
+
+---
 
 ### B. Encapsulamiento y Máquina de Estados
-La clase `OrdenCompra` utiliza un sistema de estados para proteger la integridad del proceso comercial:
-1.  **`PENDIENTE`**: Estado inicial. Solo aquí se permite agregar productos.
-2.  **`PAGADA`**: Estado alcanzado tras validar el método de pago. Habilita al Agente de Depósito.
-3.  **`ARMADA`**: El pedido ha sido físicamente procesado y empaquetado.
-4.  **`ENVIADA`**: Estado final tras la asignación de transporte logístico.
-5.  **`CANCELADA`**: Estado de reversión que devuelve automáticamente el stock al inventario.
+La clase `OrdenCompra` gestiona el ciclo de vida del pedido mediante una máquina de estados para garantizar la integridad del proceso:
 
-### C. Métodos Estáticos y Composición
-* **`Logistica.asignar_transporte`**: Definido como `@staticmethod`. Actúa como un servicio de utilidad que no requiere persistencia de estado propia, delegando la entrega a empresas externas (ej. Servientrega).
-* **Composición**: La `OrdenCompra` mantiene una lista de diccionarios que vinculan objetos de la clase `Producto` con cantidades específicas.
+- **PENDIENTE**: Estado inicial donde se permite la reserva de stock.  
+- **PAGADA**: Se alcanza tras una transacción exitosa. Es requisito para el despacho.  
+- **ARMADA**: El Agente de Depósito ha confirmado el empaque físico.  
+- **ENVIADA**: Estado final tras la delegación a la empresa de logística.  
+- **CANCELADA**: Revierte la operación y devuelve automáticamente las existencias al inventario de productos.  
+
+---
+
+### C. Tipado Estricto y Composición
+
+- **`Dict[str, Any]`**: Se utilizó tipado avanzado para los ítems de la orden, asegurando que Pylance identifique correctamente la relación entre objetos `Producto` y cantidades enteras.  
+- **Métodos Estáticos**: La clase `Logistica` utiliza `@staticmethod` para servicios de despacho que no requieren instanciación de estado, optimizando el uso de memoria.  
 
 ---
 
 ## 4. Manual de Pruebas Funcionales (Escenarios)
 
-| Funcionalidad | Método / Clase | Resultado Validado |
-| :--- | :--- | :--- |
-| **Control de Inventario** | `agregar_item()` | Se descuenta el stock en tiempo real al añadir a la orden. |
-| **Validación de Pago** | `TarjetaCredito` | Simulación de transacción exitosa que actualiza el estado a `PAGADA`. |
-| **Gestión de Depósito** | `AgenteDeposito` | Bloquea el empaque si la orden no registra pago previo. |
-| **Soporte al Cliente** | `Queja.remitir()` | Envío inmediato de incidencias a la Gerencia de Relaciones. |
+| Funcionalidad         | Clase / Método      | Resultado Validado |
+|----------------------|--------------------|-------------------|
+| Control de Stock     | `agregar_producto()` | El inventario se reduce automáticamente al añadir ítems a la orden. |
+| Validación de Pago   | `TarjetaCredito`     | Retorna un booleano que dispara el cambio de estado a PAGADA. |
+| Flujo de Depósito    | `AgenteDeposito`     | Solo permite armar pedidos que tengan el estado de pago verificado. |
+| Soporte Post-Venta   | `Queja.remitir()`    | Despliega una alerta inmediata dirigida a la Gerencia de Relaciones. |
 
 ---
 
-## 5. Instrucciones de Uso
-Para ejecutar la simulación y verificar los logs de trazabilidad en la terminal:
+## 5. Instrucciones de Ejecución
+
+Para iniciar la simulación y observar la trazabilidad de procesos en la terminal, ejecute:
 
 ```bash
 python main.py
